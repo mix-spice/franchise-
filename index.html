@@ -1681,11 +1681,11 @@ html[lang=de] #network .geo-body{gap:14px}
 </footer>
 <script>
 /* ── FORM CONFIG ─────────────────────────────────────────────
-   Заявки уходят через FormSubmit.co на partnership@anyweed.com.
-   Для активации нужно один раз отправить тестовую заявку и
-   подтвердить письмо-активацию, которое FormSubmit пришлёт
-   на partnership@anyweed.com (ссылка "Activate Form"). */
-window.ANYWEED_FORM_ENDPOINT = "https://formsubmit.co/ajax/partnership@anyweed.com";
+   Заявки уходят через Google Apps Script Web App на
+   partnership@anyweed.com. Вставьте сюда URL вида
+   https://script.google.com/macros/s/XXXXX/exec после деплоя
+   скрипта (см. ANYWEED_APPS_SCRIPT_SETUP.md). */
+window.ANYWEED_FORM_ENDPOINT = "https://script.google.com/macros/s/AKfycbw5A2jTNOMBr8Gw9OC0IMaGvyRunUJqb4fNRnm6RWmRra0Kpp3mYRVUaOr_C3J7jYfxYQ/exec";
 </script>
 <script>
 document.documentElement.classList.add('js');
@@ -1728,13 +1728,13 @@ form.addEventListener('submit',async ev=>{
  if(!validate()){const b=$('.bad')||$('#e-consent');b.scrollIntoView({block:'center',behavior:'smooth'});return}
  if(form.website.value)return; // honeypot
  const url=window.ANYWEED_FORM_ENDPOINT;
- if(!url){st.className='status fail';st.textContent=__t('noEndpoint');return}
+ if(!url||url.indexOf('PASTE_YOUR')===0){st.className='status fail';st.textContent=__t('noEndpoint');return}
  btn.disabled=true;const label=btn.textContent;btn.textContent=__t('sending');
- const data={name:form.name.value.trim(),city:form.city.value.trim(),contact:form.contact.value.trim(),email:form.email.value.trim(),format:form.format.value,message:form.message.value.trim(),consent:true,source:location.href+' ['+(window.__lang||'ru')+']',lang:window.__lang||'ru',sentAt:new Date().toISOString(),_subject:'Новая заявка на франшизу AnyWeed',_template:'table',_captcha:false};
+ const data={name:form.name.value.trim(),city:form.city.value.trim(),contact:form.contact.value.trim(),email:form.email.value.trim(),format:form.format.value,message:form.message.value.trim(),consent:true,source:location.href+' ['+(window.__lang||'ru')+']',lang:window.__lang||'ru',sentAt:new Date().toISOString()};
  try{
-  const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(data)});
-  const json=await res.json().catch(()=>null);
-  if(!res.ok||(json&&json.success===false)) throw new Error((json&&json.message)||'request failed');
+  // Apps Script Web Apps don't send CORS headers, so we POST no-cors (fire-and-forget)
+  // as plain text; Apps Script's doPost(e) reads it from e.postData.contents.
+  await fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(data)});
   form.reset();st.className='status ok';st.textContent=__t('ok');
  }catch(err){st.className='status fail';st.textContent=__t('fail')}
  finally{btn.disabled=false;btn.textContent=label}
